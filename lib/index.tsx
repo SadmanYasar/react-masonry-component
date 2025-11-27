@@ -1,12 +1,34 @@
 import React, { Component, createRef, ReactNode, HTMLAttributes, ElementType } from 'react';
-import MasonryLayout from 'masonry-layout';
-import imagesloaded from 'imagesloaded';
-import elementResizeDetectorMaker, { Erd } from 'element-resize-detector';
+import type { Erd } from 'element-resize-detector';
+import type MasonryLayoutType from 'masonry-layout';
+import type imagesloadedType from 'imagesloaded';
+
+// Re-export namespace types for external use
+type ImagesLoaded = imagesloadedType.ImagesLoaded;
+type ImagesLoadedFn = typeof imagesloadedType;
+
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
+// Lazy load browser-only dependencies to avoid SSR issues
+// These modules access `window` at module evaluation time
+let MasonryLayout: typeof MasonryLayoutType | null = null;
+let imagesloaded: ImagesLoadedFn | null = null;
+let elementResizeDetectorMaker: typeof import('element-resize-detector') | null = null;
+
+if (isBrowser) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  MasonryLayout = require('masonry-layout');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  imagesloaded = require('imagesloaded');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  elementResizeDetectorMaker = require('element-resize-detector');
+}
 
 // Type definitions for masonry-layout
 declare global {
   interface Window {
-    Masonry?: typeof MasonryLayout;
+    Masonry?: typeof MasonryLayoutType;
   }
 }
 
@@ -43,7 +65,7 @@ export interface MasonryProps extends Omit<HTMLAttributes<HTMLElement>, 'ref'> {
   enableResizableChildren?: boolean;
   disableImagesLoaded?: boolean;
   updateOnEachImageLoad?: boolean;
-  onImagesLoaded?: (instance: imagesloaded.ImagesLoaded) => void;
+  onImagesLoaded?: (instance: ImagesLoaded) => void;
   options?: MasonryOptions;
   imagesLoadedOptions?: ImagesLoadedOptions;
   elementType?: ElementType;
@@ -89,12 +111,23 @@ function debounce<T extends (...args: Parameters<T>) => void>(
   return debounced;
 }
 
-const isBrowser = typeof window !== 'undefined';
+// Get Masonry constructor (prefer window.Masonry if available for compatibility)
+function getMasonryConstructor() {
+  if (!isBrowser) return null;
+  return window.Masonry || MasonryLayout;
+}
 
-// Conditionally load masonry-layout and imagesloaded in browser environment
-// Note: This component requires a browser environment and will not render Masonry layout on the server
-const Masonry = isBrowser ? (window.Masonry || MasonryLayout) : null;
-const imagesLoadedLib = isBrowser ? imagesloaded : null;
+// Get imagesloaded library
+function getImagesLoaded() {
+  if (!isBrowser) return null;
+  return imagesloaded;
+}
+
+// Get element resize detector
+function getElementResizeDetectorMaker() {
+  if (!isBrowser) return null;
+  return elementResizeDetectorMaker;
+}
 
 /**
  * React component wrapper for Masonry layout library
@@ -114,7 +147,7 @@ class MasonryComponent extends Component<MasonryProps> {
     onRemoveComplete: () => {},
   };
 
-  public masonry: MasonryLayout | null = null;
+  public masonry: MasonryLayoutType | null = null;
   private erd: Erd | null = null;
   private latestKnownDomChildren: Element[] = [];
   private imagesLoadedCancelRef?: () => void;
@@ -157,6 +190,7 @@ class MasonryComponent extends Component<MasonryProps> {
   }
 
   private initializeMasonry(force?: boolean): void {
+    const Masonry = getMasonryConstructor();
     if (!Masonry || !this.masonryContainer) {
       return;
     }
@@ -328,6 +362,7 @@ class MasonryComponent extends Component<MasonryProps> {
   }
 
   private imagesLoaded(): void {
+    const imagesLoadedLib = getImagesLoaded();
     if (this.props.disableImagesLoaded || !imagesLoadedLib || !this.masonryContainer) {
       return;
     }
@@ -337,7 +372,7 @@ class MasonryComponent extends Component<MasonryProps> {
     }
 
     const event = this.props.updateOnEachImageLoad ? 'progress' : 'always';
-    const handler = debounce((instance: imagesloaded.ImagesLoaded) => {
+    const handler = debounce((instance: ImagesLoaded) => {
       if (this.props.onImagesLoaded) {
         this.props.onImagesLoaded(instance);
       }
@@ -360,7 +395,10 @@ class MasonryComponent extends Component<MasonryProps> {
       return;
     }
 
-    this.erd = elementResizeDetectorMaker({
+    const erdMaker = getElementResizeDetectorMaker();
+    if (!erdMaker) return;
+
+    this.erd = erdMaker({
       strategy: 'scroll',
     });
 
@@ -405,6 +443,13 @@ class MasonryComponent extends Component<MasonryProps> {
     );
   }
 }
+
+// Export ResponsiveMasonry and its types
+export { ResponsiveMasonry } from './ResponsiveMasonry';
+export type {
+  ResponsiveMasonryProps,
+  ColumnsCountBreakPoints,
+} from './ResponsiveMasonry';
 
 export default MasonryComponent;
 export { MasonryComponent };

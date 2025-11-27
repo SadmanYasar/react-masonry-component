@@ -13,12 +13,16 @@ async function build() {
   // We set 'define.amd' to undefined to prevent AMD module detection in bundled code.
   // This fixes issues with Next.js and other bundlers that try to resolve relative
   // AMD paths like './item' in the outlayer library.
+  // 
+  // Browser-only dependencies (masonry-layout, imagesloaded, element-resize-detector)
+  // are NOT bundled to ensure they are only loaded at runtime when window is available.
+  // This enables SSR compatibility with frameworks like Next.js.
   const commonOptions = {
     entryPoints: ['./lib/index.tsx'],
     bundle: true,
-    platform: 'browser',
+    platform: 'neutral',
     target: 'es2020',
-    external: ['react', 'react-dom'],
+    external: ['react', 'react-dom', 'masonry-layout', 'imagesloaded', 'element-resize-detector'],
     sourcemap: true,
     minify: false,
     define: {

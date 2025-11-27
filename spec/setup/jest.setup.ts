@@ -61,48 +61,50 @@ const mockErd = {
 
 jest.mock('element-resize-detector', () => () => mockErd);
 
-// Add CSS to document for layout tests
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  .container {
-    width: 180px;
-    position: relative;
-    list-style: none;
-    padding: 0;
-  }
+// Add CSS to document for layout tests (only in browser environment)
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    .container {
+      width: 180px;
+      position: relative;
+      list-style: none;
+      padding: 0;
+    }
 
-  .item {
-    width: 60px;
-    height: 30px;
-    float: left;
-    background-color: lightblue;
-  }
+    .item {
+      width: 60px;
+      height: 30px;
+      float: left;
+      background-color: lightblue;
+    }
 
-  .item.w2 {
-    width: 120px;
-    background-color: lightsalmon;
-  }
+    .item.w2 {
+      width: 120px;
+      background-color: lightsalmon;
+    }
 
-  .item.h2 {
-    height: 50px;
-    background-color: lightsteelblue;
-  }
+    .item.h2 {
+      height: 50px;
+      background-color: lightsteelblue;
+    }
 
-  .item.h3 {
-    height: 70px;
-    background-color: lightgrey;
-  }
+    .item.h3 {
+      height: 70px;
+      background-color: lightgrey;
+    }
 
-  .item.h4 {
-    height: 90px;
-    background-color: lightgoldenrodyellow;
-  }
+    .item.h4 {
+      height: 90px;
+      background-color: lightgoldenrodyellow;
+    }
 
-  .item.imagesloaded {
-    background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7);
-  }
-`;
-document.head.appendChild(styleSheet);
+    .item.imagesloaded {
+      background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7);
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}
 
 // Export mocks for tests to access
 export { MockMasonry, mockMasonryInstance, mockImagesLoaded, mockErd };
