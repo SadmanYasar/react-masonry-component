@@ -7,7 +7,7 @@ import { renderToString } from 'react-dom/server';
 describe('SSR Compatibility', () => {
   describe('MasonryComponent', () => {
     it('should render without errors in Node.js environment', () => {
-      // Dynamic import to ensure proper module isolation
+      // Dynamic require to ensure proper module isolation in Node environment
       const { default: MasonryComponent } = require('../lib/index');
 
       // Should not throw when rendering to string
