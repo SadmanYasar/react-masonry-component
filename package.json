@@ -1,5 +1,5 @@
 {
-  "name": "react-masonry-component",
+  "name": "@sy17/react-masonry-component",
   "version": "1.0.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
