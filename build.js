@@ -9,30 +9,35 @@ async function build() {
   }
   fs.mkdirSync('./dist');
 
-  // Build ESM
-  await esbuild.build({
+  // Common build options
+  // We set 'define.amd' to undefined to prevent AMD module detection in bundled code.
+  // This fixes issues with Next.js and other bundlers that try to resolve relative
+  // AMD paths like './item' in the outlayer library.
+  const commonOptions = {
     entryPoints: ['./lib/index.tsx'],
     bundle: true,
-    outfile: './dist/index.mjs',
-    format: 'esm',
     platform: 'browser',
     target: 'es2020',
     external: ['react', 'react-dom'],
     sourcemap: true,
     minify: false,
+    define: {
+      'define.amd': 'undefined',
+    },
+  };
+
+  // Build ESM
+  await esbuild.build({
+    ...commonOptions,
+    outfile: './dist/index.mjs',
+    format: 'esm',
   });
 
   // Build CJS
   await esbuild.build({
-    entryPoints: ['./lib/index.tsx'],
-    bundle: true,
+    ...commonOptions,
     outfile: './dist/index.js',
     format: 'cjs',
-    platform: 'browser',
-    target: 'es2020',
-    external: ['react', 'react-dom'],
-    sourcemap: true,
-    minify: false,
   });
 
   // Generate type declarations using tsconfig.build.json
