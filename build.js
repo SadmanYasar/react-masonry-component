@@ -10,8 +10,9 @@ async function build() {
   fs.mkdirSync('./dist');
 
   // Common build options
-  // We define 'define' as undefined to prevent AMD module detection in bundled code
-  // This fixes issues with Next.js and other bundlers that try to resolve AMD paths
+  // We set 'define.amd' to undefined to prevent AMD module detection in bundled code.
+  // This fixes issues with Next.js and other bundlers that try to resolve relative
+  // AMD paths like './item' in the outlayer library.
   const commonOptions = {
     entryPoints: ['./lib/index.tsx'],
     bundle: true,
@@ -20,8 +21,6 @@ async function build() {
     external: ['react', 'react-dom'],
     sourcemap: true,
     minify: false,
-    // Disable AMD define detection to prevent bundlers from trying to resolve
-    // relative AMD paths like './item' in the outlayer library
     define: {
       'define.amd': 'undefined',
     },
