@@ -2,18 +2,20 @@
 
 [![npm version](https://badge.fury.io/js/react-masonry-component.svg)](http://badge.fury.io/js/react-masonry-component)
 
-A React.js Masonry component with full TypeScript support. Works with React 17, 18, and 19.
+A React.js Masonry component with full TypeScript support. Works with React 17, 18, and 19. **SSR compatible** with Next.js and other server-side rendering frameworks.
 
 ## Table of Contents
 
 1. [Installation](#installation)
 2. [Basic Usage](#basic-usage)
-3. [TypeScript Support](#typescript-support)
-4. [Props](#props)
-5. [Custom Props](#custom-props)
-6. [Accessing Masonry Instance](#accessing-masonry-instance)
-7. [Images Loaded Options](#images-loaded-options)
-8. [Events](#events)
+3. [Server-Side Rendering (SSR)](#server-side-rendering-ssr)
+4. [Responsive Masonry](#responsive-masonry)
+5. [TypeScript Support](#typescript-support)
+6. [Props](#props)
+7. [Custom Props](#custom-props)
+8. [Accessing Masonry Instance](#accessing-masonry-instance)
+9. [Images Loaded Options](#images-loaded-options)
+10. [Events](#events)
 
 ## Installation
 
@@ -65,12 +67,88 @@ function Gallery({ elements }: GalleryProps) {
 export default Gallery;
 ```
 
+## Server-Side Rendering (SSR)
+
+This component is fully compatible with server-side rendering frameworks like **Next.js**. The component safely handles the `window` object and browser-only dependencies, so you won't encounter "window is not defined" errors during SSR.
+
+### Next.js Usage
+
+Simply import and use the component - no special configuration needed:
+
+```tsx
+// app/page.tsx or pages/gallery.tsx
+"use client"; // For Next.js 13+ App Router
+
+import Masonry from '@sy17/react-masonry-component';
+
+export default function Gallery() {
+  return (
+    <Masonry className="my-gallery">
+      <div className="item">Item 1</div>
+      <div className="item">Item 2</div>
+      <div className="item">Item 3</div>
+    </Masonry>
+  );
+}
+```
+
+## Responsive Masonry
+
+Use the `ResponsiveMasonry` component to automatically adjust the layout based on viewport width breakpoints:
+
+```tsx
+import React from 'react';
+import Masonry, { ResponsiveMasonry } from '@sy17/react-masonry-component';
+
+function Gallery() {
+  return (
+    <ResponsiveMasonry
+      columnsCountBreakPoints={{ 300: 2, 500: 3, 700: 5, 900: 6 }}
+      className="p-5"
+    >
+      {(columnsCount) => (
+        <Masonry options={{ columnWidth: `${100 / columnsCount}%` }}>
+          <div className="item">Item 1</div>
+          <div className="item">Item 2</div>
+          <div className="item">Item 3</div>
+        </Masonry>
+      )}
+    </ResponsiveMasonry>
+  );
+}
+
+export default Gallery;
+```
+
+### ResponsiveMasonry Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `columnsCountBreakPoints` | `{ [breakpoint: number]: number }` | `{ 350: 1, 750: 2, 900: 3 }` | Breakpoint configuration for responsive columns. Keys are minimum viewport widths in pixels, values are column counts. |
+| `children` | `ReactNode \| ((columnsCount: number) => ReactNode)` | - | Children to render. Can be a render prop function that receives the current column count. |
+
+### How Breakpoints Work
+
+The component uses the column count for the largest matching breakpoint. For example, with `{ 300: 2, 500: 3, 700: 5 }`:
+
+- Viewport width < 300px: 1 column (default)
+- Viewport width 300-499px: 2 columns
+- Viewport width 500-699px: 3 columns
+- Viewport width >= 700px: 5 columns
+
 ## TypeScript Support
 
 This package includes built-in TypeScript definitions. You can import the types directly:
 
 ```tsx
-import Masonry, { MasonryProps, MasonryOptions, ImagesLoadedOptions } from 'react-masonry-component';
+import Masonry, { 
+  MasonryProps, 
+  MasonryOptions, 
+  ImagesLoadedOptions,
+  ResponsiveMasonry,
+  ResponsiveMasonryProps,
+  ColumnsCountBreakPoints
+} from '@sy17/react-masonry-component';
 
 const options: MasonryOptions = {
   columnWidth: 200,
@@ -81,6 +159,12 @@ const options: MasonryOptions = {
 const imagesLoadedOptions: ImagesLoadedOptions = {
   background: '.my-bg-image-el'
 };
+
+const breakpoints: ColumnsCountBreakPoints = {
+  300: 2,
+  500: 3,
+  700: 5
+};
 ```
 
 ### Available Types
@@ -88,6 +172,8 @@ const imagesLoadedOptions: ImagesLoadedOptions = {
 - **`MasonryOptions`** - Configuration options for Masonry layout
 - **`MasonryProps`** - Props for the Masonry component
 - **`ImagesLoadedOptions`** - Options for imagesloaded library
+- **`ResponsiveMasonryProps`** - Props for the ResponsiveMasonry component
+- **`ColumnsCountBreakPoints`** - Type for responsive breakpoint configuration
 
 ### MasonryOptions
 
