@@ -10,19 +10,35 @@ type ImagesLoadedFn = typeof imagesloadedType;
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
-// Lazy load browser-only dependencies to avoid SSR issues
-// These modules access `window` at module evaluation time
+// Lazy-loaded browser-only dependencies
+// These are loaded dynamically to support Turbopack and avoid SSR issues
 let MasonryLayout: typeof MasonryLayoutType | null = null;
 let imagesloaded: ImagesLoadedFn | null = null;
 let elementResizeDetectorMaker: typeof import('element-resize-detector') | null = null;
+let dependenciesLoaded = false;
+let dependenciesLoadingPromise: Promise<void> | null = null;
 
-if (isBrowser) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  MasonryLayout = require('masonry-layout');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  imagesloaded = require('imagesloaded');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  elementResizeDetectorMaker = require('element-resize-detector');
+// Load browser-only dependencies dynamically
+// This approach is compatible with Turbopack which doesn't support dynamic require()
+function loadDependencies(): Promise<void> {
+  if (!isBrowser) return Promise.resolve();
+  if (dependenciesLoaded) return Promise.resolve();
+  if (dependenciesLoadingPromise) return dependenciesLoadingPromise;
+  
+  dependenciesLoadingPromise = Promise.all([
+    import('masonry-layout'),
+    import('imagesloaded'),
+    import('element-resize-detector'),
+  ]).then(([masonryModule, imagesloadedModule, erdModule]) => {
+    MasonryLayout = masonryModule.default;
+    imagesloaded = imagesloadedModule.default;
+    elementResizeDetectorMaker = erdModule.default;
+    dependenciesLoaded = true;
+  }).catch((error) => {
+    console.error('Failed to load masonry dependencies:', error);
+  });
+  
+  return dependenciesLoadingPromise;
 }
 
 // Type definitions for masonry-layout
@@ -158,14 +174,20 @@ class MasonryComponent extends Component<MasonryProps> {
   }
 
   componentDidMount(): void {
-    this.initializeMasonry();
-    this.initializeResizableChildren();
-    this.imagesLoaded();
+    // Load dependencies asynchronously then initialize
+    loadDependencies().then(() => {
+      this.initializeMasonry();
+      this.initializeResizableChildren();
+      this.imagesLoaded();
+    });
   }
 
   componentDidUpdate(): void {
-    this.performLayout();
-    this.imagesLoaded();
+    // Only perform layout if dependencies are loaded
+    if (dependenciesLoaded) {
+      this.performLayout();
+      this.imagesLoaded();
+    }
   }
 
   componentWillUnmount(): void {

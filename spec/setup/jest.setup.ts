@@ -34,7 +34,11 @@ class MockMasonry {
   }
 }
 
-jest.mock('masonry-layout', () => MockMasonry);
+// Mock masonry-layout with default export for ESM dynamic import compatibility
+jest.mock('masonry-layout', () => ({
+  __esModule: true,
+  default: MockMasonry,
+}));
 
 // Mock for imagesloaded
 const mockImagesLoaded = jest.fn().mockImplementation(() => ({
@@ -49,7 +53,11 @@ const mockImagesLoaded = jest.fn().mockImplementation(() => ({
   options: {},
 }));
 
-jest.mock('imagesloaded', () => mockImagesLoaded);
+// Mock imagesloaded with default export for ESM dynamic import compatibility
+jest.mock('imagesloaded', () => ({
+  __esModule: true,
+  default: mockImagesLoaded,
+}));
 
 // Mock for element-resize-detector
 const mockErd = {
@@ -59,7 +67,11 @@ const mockErd = {
   uninstall: jest.fn(),
 };
 
-jest.mock('element-resize-detector', () => () => mockErd);
+// Mock element-resize-detector with default export for ESM dynamic import compatibility
+jest.mock('element-resize-detector', () => ({
+  __esModule: true,
+  default: () => mockErd,
+}));
 
 // Add CSS to document for layout tests (only in browser environment)
 if (typeof document !== 'undefined') {

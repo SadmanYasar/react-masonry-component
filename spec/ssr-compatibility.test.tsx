@@ -128,8 +128,7 @@ describe('SSR Compatibility', () => {
           {
             columnsCountBreakPoints: { 400: 2, 800: 4 },
           },
-          (columnsCount: number) => 
-            React.createElement('div', null, `Columns: ${columnsCount}`)
+          React.createElement('div', null, 'Columns: 4')
         )
       );
 

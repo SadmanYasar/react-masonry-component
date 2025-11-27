@@ -36,7 +36,7 @@ describe('React Masonry Component', () => {
       expect(containerWithClass.querySelector('.my-class')).toBeInTheDocument();
     });
 
-    it('should provide a reference to the Masonry instance', () => {
+    it('should provide a reference to the Masonry instance', async () => {
       function Wrapper() {
         const masonryRef = useRef<typeof MasonryComponent | null>(null);
         
@@ -45,8 +45,10 @@ describe('React Masonry Component', () => {
 
       render(<Wrapper />);
       
-      // Check that Masonry was instantiated
-      expect(MockMasonry.instances.length).toBe(1);
+      // Check that Masonry was instantiated (wait for async loading)
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
     });
 
     it('should support events as props', async () => {
@@ -64,9 +66,11 @@ describe('React Masonry Component', () => {
         </MasonryComponent>
       );
 
-      // Verify that event handlers were registered with Masonry
-      expect(mockMasonryInstance.on).toHaveBeenCalledWith('layoutComplete', layoutEventHandler);
-      expect(mockMasonryInstance.on).toHaveBeenCalledWith('removeComplete', removeEventHandler);
+      // Verify that event handlers were registered with Masonry (wait for async loading)
+      await waitFor(() => {
+        expect(mockMasonryInstance.on).toHaveBeenCalledWith('layoutComplete', layoutEventHandler);
+        expect(mockMasonryInstance.on).toHaveBeenCalledWith('removeComplete', removeEventHandler);
+      });
     });
 
     it('should render children', () => {
@@ -84,7 +88,7 @@ describe('React Masonry Component', () => {
       }
     });
 
-    it('should initialize Masonry with provided options', () => {
+    it('should initialize Masonry with provided options', async () => {
       const customOptions = {
         columnWidth: 100,
         itemSelector: '.item',
@@ -97,13 +101,15 @@ describe('React Masonry Component', () => {
         </MasonryComponent>
       );
 
-      // Check that Masonry was instantiated
-      expect(MockMasonry.instances.length).toBe(1);
+      // Check that Masonry was instantiated (wait for async loading)
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
     });
   });
 
   describe('imagesloaded usage', () => {
-    it('should call imagesloaded when component mounts', () => {
+    it('should call imagesloaded when component mounts', async () => {
       render(
         <MasonryComponent className="container" elementType="div" options={masonryOptions}>
           <img
@@ -114,8 +120,10 @@ describe('React Masonry Component', () => {
         </MasonryComponent>
       );
 
-      // Verify imagesloaded was called
-      expect(mockImagesLoaded).toHaveBeenCalled();
+      // Verify imagesloaded was called (wait for async loading)
+      await waitFor(() => {
+        expect(mockImagesLoaded).toHaveBeenCalled();
+      });
     });
 
     it('should not call imagesloaded when disableImagesLoaded is true', () => {
@@ -140,7 +148,7 @@ describe('React Masonry Component', () => {
       expect(mockImagesLoaded).not.toHaveBeenCalled();
     });
 
-    it('should pass imagesLoadedOptions to imagesloaded', () => {
+    it('should pass imagesLoadedOptions to imagesloaded', async () => {
       const imagesLoadedOptions = { background: '.imagesloaded' };
       
       render(
@@ -154,11 +162,13 @@ describe('React Masonry Component', () => {
         </MasonryComponent>
       );
 
-      // Verify imagesloaded was called with options
-      expect(mockImagesLoaded).toHaveBeenCalledWith(
-        expect.any(Element),
-        imagesLoadedOptions
-      );
+      // Verify imagesloaded was called with options (wait for async loading)
+      await waitFor(() => {
+        expect(mockImagesLoaded).toHaveBeenCalledWith(
+          expect.any(Element),
+          imagesLoadedOptions
+        );
+      });
     });
   });
 
@@ -182,6 +192,11 @@ describe('React Masonry Component', () => {
       }
 
       render(<Wrapper />);
+
+      // Wait for masonry to be initialized first
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
 
       // Clear mocks to check for updates
       mockMasonryInstance.layout.mockClear();
@@ -217,6 +232,11 @@ describe('React Masonry Component', () => {
       }
 
       render(<Wrapper />);
+
+      // Wait for masonry to be initialized first
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
 
       // Clear mocks
       mockMasonryInstance.appended.mockClear();
@@ -266,6 +286,11 @@ describe('React Masonry Component', () => {
 
       render(<Wrapper />);
 
+      // Wait for masonry to be initialized first
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
+
       // Clear mocks
       mockMasonryInstance.layout.mockClear();
       mockMasonryInstance.reloadItems.mockClear();
@@ -284,12 +309,17 @@ describe('React Masonry Component', () => {
   });
 
   describe('cleanup', () => {
-    it('should call destroy on unmount', () => {
+    it('should call destroy on unmount', async () => {
       const { unmount } = render(
         <MasonryComponent>
           <div className="item">Item</div>
         </MasonryComponent>
       );
+
+      // Wait for masonry to be initialized
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
 
       mockMasonryInstance.destroy.mockClear();
       mockMasonryInstance.off.mockClear();
@@ -299,7 +329,7 @@ describe('React Masonry Component', () => {
       expect(mockMasonryInstance.destroy).toHaveBeenCalled();
     });
 
-    it('should unregister event handlers on unmount', () => {
+    it('should unregister event handlers on unmount', async () => {
       const onLayoutComplete = jest.fn();
       const onRemoveComplete = jest.fn();
 
@@ -312,6 +342,11 @@ describe('React Masonry Component', () => {
         </MasonryComponent>
       );
 
+      // Wait for masonry to be initialized
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
+
       mockMasonryInstance.off.mockClear();
 
       unmount();
@@ -322,7 +357,7 @@ describe('React Masonry Component', () => {
   });
 
   describe('resizable children', () => {
-    it('should initialize element resize detector when enableResizableChildren is true', () => {
+    it('should initialize element resize detector when enableResizableChildren is true', async () => {
       render(
         <MasonryComponent enableResizableChildren={true}>
           <div className="item">Item</div>
@@ -331,7 +366,10 @@ describe('React Masonry Component', () => {
 
       // The element-resize-detector mock is called in the factory function
       // If we get here without errors, the component handled it correctly
-      expect(MockMasonry.instances.length).toBe(1);
+      // Wait for async loading
+      await waitFor(() => {
+        expect(MockMasonry.instances.length).toBe(1);
+      });
     });
   });
 
